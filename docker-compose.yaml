@@ -1,0 +1,86 @@
+version: "3"
+services:
+  nosql:
+    image: mongo
+    ports:
+      - "27017:27017"
+    container_name: mongodb
+    hostname: mongodb
+    networks:
+      - kbc
+    volumes:
+      - ./db/:/data/db
+  sql:
+    build:
+      dockerfile: Dockerfile
+      context: ./db/sql
+    ports:
+      - "3306:3306"
+    container_name: sqldb
+    restart: always
+    hostname: sqlhost
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: products
+    networks:
+      - kbc
+    volumes:
+      - ./db/:/data/db
+  products:
+    build:
+      dockerfile: Dockerfile
+      context: ./products
+    container_name: products
+    networks:
+      - kbc
+    ports:
+      - "5001:5001"
+    restart: always
+    depends_on:
+      - sql
+    env_file:
+      - ./products/.env
+  shopping:
+    build:
+      dockerfile: Dockerfile
+      context: ./shopping
+    container_name: shopping
+    networks:
+      - kbc
+    ports:
+      - "5002:5002"
+    restart: always
+    depends_on:
+      - nosql
+    env_file:
+      - ./shopping/.env
+  customer:
+    build:
+      dockerfile: Dockerfile
+      context: ./customer
+    container_name: customer
+    networks:
+      - kbc
+    ports:
+      - "5000:5000"
+    restart: always
+    depends_on:
+      - nosql
+    env_file:
+      - ./customer/.env
+  nginx-proxy:
+    restart: always
+    image: nginx:latest
+    container_name: nginx
+    networks:
+      - kbc
+    volumes:
+      - "./nginx/default.conf:/etc/nginx/conf.d/default.conf"
+    depends_on:
+      - shopping
+      - products
+      - customer
+    ports:
+      - 80:80
+networks:
+  kbc:

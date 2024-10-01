@@ -1,0 +1,24 @@
+generator client {
+    provider = "prisma-client-js"
+    binaryTargets = ["native", "windows", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+    provider = "mysql"
+    url      = env("MYSQL_URI")
+}
+
+// creating a table/collection in db
+model Product {
+    id        String   @id @default(uuid())
+    name      String
+    desc      String
+    banner    String
+    type      String
+    unit      Int
+    price     Int
+    available Boolean
+    supplier  String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @default(now())
+}
